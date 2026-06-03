@@ -2,8 +2,8 @@
 # WI-3yaa.RP-WORKFLOWS-RECOVER — per-submodule publish for yaagents-sdk-fastapi
 # Adapted from monorepo yaagents/.github/workflows/pypi-publish.yml
 # for single-package single-repo layout. Package: yaagents-fastapi
-# ADR PI1-yaa-0005 — OIDC Trusted Publisher; no long-lived token
-# ADR PI2-yaa-0003 — Apache 2.0 license metadata
+# OIDC Trusted Publisher; no long-lived token
+# Apache 2.0 license metadata
 #
 # Flow: license-clean-scan -> build -> TestPyPI gate -> verify -> PyPI publish
 # Auth: PyPI Trusted Publisher OIDC (id-token: write); zero long-lived token
@@ -35,11 +35,11 @@ jobs:
 
       # -- PRE-PUBLISH GATE: community-license grep ----------------------------
       # WI-3yaa.RP-WORKFLOWS-RECOVER + NFR-REL-1: zero "YAAgents Community License"
-      # hits in Python source before any wheel is built. ADR PI2-yaa-0003.
+      # hits in Python source before any wheel is built.
       - name: license-clean-scan (pre-publish gate)
         run: |
           if grep -rn "YAAgents Community License" --include='*.py' .; then
-            echo "::error::Community License string found in Python sources — cannot publish. See ADR PI2-yaa-0003."
+            echo "::error::Community License string found in Python sources — cannot publish. See"
             exit 1
           fi
           echo "license-clean-scan: PASS — no Community License strings found"
@@ -139,7 +139,7 @@ jobs:
           meta = im.metadata("yaagents-fastapi")
           lic = meta.get("License-Expression") or meta.get("License") or ""
           assert "Apache-2.0" in str(lic), \
-              f"yaagents-fastapi: License={lic!r} — expected Apache-2.0 (ADR PI2-yaa-0003)"
+              f"yaagents-fastapi: License={lic!r} — expected Apache-2.0 "
           urls = meta.get_all("Project-URL") or []
           assert any(
               "Supports-YAAgents-Profile" in u and "v0.3" in u for u in urls
