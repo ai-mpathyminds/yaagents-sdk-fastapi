@@ -122,8 +122,8 @@ jobs:
       - name: Install from TestPyPI (with pypi.org for deps)
         run: |
           pip install \
-            --index-url https://test.pypi.org/simple/ \
-            --extra-index-url https://pypi.org/simple/ \
+            --index-url https://pypi.org/simple/ \
+            --extra-index-url https://test.pypi.org/simple/ \
             "yaagents-fastapi==${{ steps.ver.outputs.version }}"
 
       - name: Smoke-test profile declaration + license
@@ -132,7 +132,7 @@ jobs:
           import importlib.metadata as im
           from yaagents_fastapi import __version__ as fv, __profile__ as fp
 
-          assert fp == "v0.2", f"profile mismatch: {fp}"
+          assert fp == "v0.3", f"profile mismatch: {fp}"
           print(f"OK  version={fv}  profile={fp}")
 
           meta = im.metadata("yaagents-fastapi")
@@ -141,9 +141,9 @@ jobs:
               f"yaagents-fastapi: License={lic!r} — expected Apache-2.0 (ADR PI2-yaa-0003)"
           urls = meta.get_all("Project-URL") or []
           assert any(
-              "Supports-YAAgents-Profile" in u and "v0.2" in u for u in urls
-          ), f"yaagents-fastapi: Supports-YAAgents-Profile: v0.2 not found. Project-URLs={urls}"
-          print(f"PASS  yaagents-fastapi  License={lic}  Supports-YAAgents-Profile: v0.2")
+              "Supports-YAAgents-Profile" in u and "v0.3" in u for u in urls
+          ), f"yaagents-fastapi: Supports-YAAgents-Profile: v0.3 not found. Project-URLs={urls}"
+          print(f"PASS  yaagents-fastapi  License={lic}  Supports-YAAgents-Profile: v0.3")
           EOF
 
   # -- 4. Publish to production PyPI ------------------------------------------
