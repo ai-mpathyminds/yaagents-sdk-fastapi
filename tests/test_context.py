@@ -1,9 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 AimpathyMinds
 
-"""Tests for AgenticContext and RequiredInput — WI-1yaa.SDK-2.
-
-AC:
+"""Tests for AgenticContext and RequiredInput — AC:
 - AgenticContext injectable via Depends; all 4 fields populated from headers.
 - RequiredInput round-trips into a §4.1-shaped requiredInputs[] entry.
 """

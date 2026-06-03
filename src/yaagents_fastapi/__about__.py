@@ -5,7 +5,7 @@
 
 __version__ = "0.3.0"
 
-# Profile version literal — spec/VERSION = 0.3 (ADR PI3-yaa-0003 §3)
+# Profile version literal — spec/VERSION = 0.3
 __profile__ = "v0.3"
 
 #: Public alias used by acceptance-criterion check:

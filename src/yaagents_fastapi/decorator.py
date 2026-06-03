@@ -1,9 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 AimpathyMinds
 
-"""@agentic_operation decorator, AgenticResponses, and AgenticRouter — WI-1yaa.SDK-3.
-
-``@agentic_operation`` decorates an endpoint function with two effects:
+"""@agentic_operation decorator, AgenticResponses, and AgenticRouter — ``@agentic_operation`` decorates an endpoint function with two effects:
 
 1. **Signature injection** — adds
    ``ctx: Annotated[AgenticContext, Depends(AgenticContext)]`` to the
@@ -18,7 +16,7 @@
      with correct vendor ``Content-Type`` + schema ``$ref`` per declared
      type (status codes and media types from ``spec/agentic-rest-profile.md
      §4``; schema ``$ref`` URIs from ``schemas/v0.1/`` canonical ``$id``
-     values per ADR PI1-yaa-0002 §3).
+     values per §3).
 
 ``AgenticRouter`` (wraps ``APIRouter``) provides a convenience ``post()``
 method that accepts the agentic metadata kwargs and passes computed
@@ -70,8 +68,7 @@ class AgenticResponses:
 
     Status codes and ``Content-Type`` values: ``spec/agentic-rest-profile.md
     §4`` (used here as MIME-type identifiers, not table redefinition).
-    Schema ``$ref`` URIs: ``schemas/v0.1/`` canonical ``$id`` values
-    (ADR PI1-yaa-0002 §3).
+    Schema ``$ref`` URIs: ``schemas/v0.1/`` canonical ``$id`` values.
     """
 
     success: bool = False
@@ -105,7 +102,7 @@ class AgenticResponses:
             result[202] = {
                 "description": (
                     "Accepted for async processing (spec §7.3)."
-                    " Polling runtime is v0.2 scope (ADR PI1-yaa-0002 §4)."
+                    " Polling runtime is v0.2 scope."
                 ),
                 "content": {
                     "application/vnd.yaagents.operation+json": {

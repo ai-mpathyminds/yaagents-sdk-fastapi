@@ -1,9 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 AimpathyMinds
 
-"""AgenticContext and RequiredInput — WI-1yaa.SDK-2.
-
-AgenticContext
+"""AgenticContext and RequiredInput — AgenticContext
 --------------
 FastAPI class-based dependency that extracts the four gateway-injected headers
 (gateway source: ``gateway/internal/tenant/tenant.go``):
