@@ -1,0 +1,168 @@
+# .github/workflows/pypi-publish.yml
+# WI-3yaa.RP-WORKFLOWS-RECOVER — per-submodule publish for yaagents-sdk-fastapi
+# Adapted from monorepo yaagents/.github/workflows/pypi-publish.yml
+# for single-package single-repo layout. Package: yaagents-fastapi
+# ADR PI1-yaa-0005 — OIDC Trusted Publisher; no long-lived token
+# ADR PI2-yaa-0003 — Apache 2.0 license metadata
+#
+# Flow: license-clean-scan -> build -> TestPyPI gate -> verify -> PyPI publish
+# Auth: PyPI Trusted Publisher OIDC (id-token: write); zero long-lived token
+#
+# External setup (operator-side):
+#   PyPI Trusted Publisher: ai-mpathyminds/yaagents-sdk-fastapi / pypi-publish.yml
+#   Environments "testpypi" + "pypi" configured on pypi.org / test.pypi.org
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version without v prefix (e.g. 0.3.0) — required for manual dispatch'
+        required: true
+        type: string
+
+jobs:
+  # -- 1. Build ---------------------------------------------------------------
+  build:
+    name: Build yaagents-fastapi distribution
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # -- PRE-PUBLISH GATE: community-license grep ----------------------------
+      # WI-3yaa.RP-WORKFLOWS-RECOVER + NFR-REL-1: zero "YAAgents Community License"
+      # hits in Python source before any wheel is built. ADR PI2-yaa-0003.
+      - name: license-clean-scan (pre-publish gate)
+        run: |
+          if grep -rn "YAAgents Community License" --include='*.py' .; then
+            echo "::error::Community License string found in Python sources — cannot publish. See ADR PI2-yaa-0003."
+            exit 1
+          fi
+          echo "license-clean-scan: PASS — no Community License strings found"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Hatch
+        run: pip install hatch==1.12.0
+
+      - name: Get version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build yaagents-fastapi
+        run: hatch build
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  # -- 2. Publish to TestPyPI -------------------------------------------------
+  publish-testpypi:
+    name: TestPyPI -- yaagents-fastapi
+    needs: build
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write   # OIDC Trusted Publisher; no API token
+
+    steps:
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: dist/
+          skip-existing: true   # idempotent re-runs
+
+  # -- 3. Verify TestPyPI install ---------------------------------------------
+  verify-testpypi:
+    name: Verify TestPyPI install
+    needs: publish-testpypi
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Small delay — TestPyPI CDN may take a moment to propagate the upload.
+      - name: Wait for TestPyPI propagation
+        run: sleep 20
+
+      - name: Install from TestPyPI (with pypi.org for deps)
+        run: |
+          pip install \
+            --index-url https://test.pypi.org/simple/ \
+            --extra-index-url https://pypi.org/simple/ \
+            "yaagents-fastapi==${{ steps.ver.outputs.version }}"
+
+      - name: Smoke-test profile declaration + license
+        run: |
+          python - <<'EOF'
+          import importlib.metadata as im
+          from yaagents_fastapi import __version__ as fv, __profile__ as fp
+
+          assert fp == "v0.2", f"profile mismatch: {fp}"
+          print(f"OK  version={fv}  profile={fp}")
+
+          meta = im.metadata("yaagents-fastapi")
+          lic = meta.get("License-Expression") or meta.get("License") or ""
+          assert "Apache-2.0" in str(lic), \
+              f"yaagents-fastapi: License={lic!r} — expected Apache-2.0 (ADR PI2-yaa-0003)"
+          urls = meta.get_all("Project-URL") or []
+          assert any(
+              "Supports-YAAgents-Profile" in u and "v0.2" in u for u in urls
+          ), f"yaagents-fastapi: Supports-YAAgents-Profile: v0.2 not found. Project-URLs={urls}"
+          print(f"PASS  yaagents-fastapi  License={lic}  Supports-YAAgents-Profile: v0.2")
+          EOF
+
+  # -- 4. Publish to production PyPI ------------------------------------------
+  publish-pypi:
+    name: PyPI -- yaagents-fastapi
+    needs: verify-testpypi
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
