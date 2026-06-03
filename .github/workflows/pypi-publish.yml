@@ -119,12 +119,13 @@ jobs:
       - name: Wait for TestPyPI propagation
         run: sleep 20
 
-      - name: Install from TestPyPI (with pypi.org for deps)
+      - name: Install from TestPyPI (2-step — deps from PyPI only)
         run: |
-          pip install \
-            --index-url https://pypi.org/simple/ \
-            --extra-index-url https://test.pypi.org/simple/ \
-            "yaagents-fastapi==${{ steps.ver.outputs.version }}"
+          # Step 1: Download only the wheel from TestPyPI (no dep resolution)
+          # Avoids TestPyPI's broken FASTAPI-1.0.tar.gz shadowing real fastapi
+          pip download --no-deps             --index-url https://test.pypi.org/simple/             --dest /tmp/testpypi-whl             "yaagents-fastapi==${{ steps.ver.outputs.version }}"
+          # Step 2: Install wheel; deps resolve from PyPI only (no TestPyPI)
+          pip install /tmp/testpypi-whl/yaagents_fastapi-${{ steps.ver.outputs.version }}-py3-none-any.whl
 
       - name: Smoke-test profile declaration + license
         run: |
