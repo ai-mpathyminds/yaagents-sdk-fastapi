@@ -3,7 +3,7 @@
 
 """Package metadata for yaagents-fastapi."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 # Profile version literal — spec/VERSION = 0.3 (ADR PI3-yaa-0003 §3)
 __profile__ = "v0.3"

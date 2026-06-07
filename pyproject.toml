@@ -57,6 +57,9 @@ test = [
     "jsonschema>=4.23",
     "pip-audit>=2.7",
 ]
+otel = [
+    "opentelemetry-sdk>=1.20",
+]
 
 # ── pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]

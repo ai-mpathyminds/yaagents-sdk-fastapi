@@ -42,6 +42,7 @@ from typing import (
 
 from fastapi import APIRouter, Depends
 
+from yaagents_fastapi.audit import AuditEmitter, NoopEmitter
 from yaagents_fastapi.context import AgenticContext
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -53,6 +54,7 @@ OperationKind = Literal[
 # Attribute names stored on decorated functions.
 _OPENAPI_EXTRA_ATTR = "__agentic_openapi_extra__"
 _RESPONSES_ATTR = "__agentic_responses__"
+_AUDIT_EMITTER_ATTR = "__agentic_audit_emitter__"
 
 
 # ---------------------------------------------------------------------------
@@ -287,6 +289,7 @@ def agentic_operation(
     mutating: bool = False,
     roles: list[str] | None = None,
     responses: AgenticResponses,
+    audit_emitter: AuditEmitter | None = None,
 ) -> Callable[[F], F]:
     """Decorator: inject ``AgenticContext`` + store x-yaagents OpenAPI metadata.
 
@@ -318,7 +321,17 @@ def agentic_operation(
 
     ``roles`` is stored for future gateway RBAC enforcement; currently
     informational only.
+
+    ``audit_emitter`` configures the audit sink for this operation.  Defaults
+    to :class:`~yaagents_fastapi.audit.NoopEmitter` (no-op; falls back to
+    NoopEmitter when ``None``).  The resolved emitter is stored as
+    ``func.__agentic_audit_emitter__`` for introspection; runtime injection
+    into ``ctx.audit_emitter`` is caller-side responsibility in v0.4
+    (ADR PI4-yaa-0001 §Decision 3).
     """
+    _resolved_emitter: AuditEmitter = (
+        audit_emitter if audit_emitter is not None else NoopEmitter()
+    )
 
     def decorator(func: F) -> F:
         _inject_context_param(func)
@@ -326,6 +339,8 @@ def agentic_operation(
             resource, operation_kind, mutating
         ))
         setattr(func, _RESPONSES_ATTR, responses.to_openapi_responses())
+        # Store resolved emitter for introspection / future injection.
+        setattr(func, _AUDIT_EMITTER_ATTR, _resolved_emitter)
         return func
 
     return decorator

@@ -24,11 +24,14 @@ feed :meth:`~yaagents_fastapi.response.AgenticResponse.clarification_required`.
 
 from __future__ import annotations
 
+import contextlib
 import uuid
 from dataclasses import dataclass
 from typing import Annotated, Any, Literal
 
 from fastapi import Header
+
+from yaagents_fastapi.audit import AuditEmitter, AuditEvent, NoopEmitter
 
 
 class AgenticContext:
@@ -63,6 +66,7 @@ class AgenticContext:
     actor_id: str
     correlation_id: str
     request_id: str
+    audit_emitter: AuditEmitter
 
     def __init__(
         self,
@@ -90,6 +94,42 @@ class AgenticContext:
         # Generate UUID v4 when the gateway header is absent — standalone use.
         self.correlation_id = x_correlation_id or str(uuid.uuid4())
         self.request_id = x_request_id or str(uuid.uuid4())
+        # Default no-op emitter — replaced at the operation level when a
+        # concrete emitter is configured (ADR PI4-yaa-0001).
+        self.audit_emitter: AuditEmitter = NoopEmitter()
+
+    async def audit_emit(self, event_type: str, **attributes: str) -> None:
+        """Emit an audit event, auto-populated from this request context.
+
+        Constructs an :class:`~yaagents_fastapi.audit.AuditEvent` with
+        ``tenant_id``, ``actor_id``, ``correlation_id``, and ``request_id``
+        taken from the live context, then delegates to
+        :attr:`audit_emitter`.  Extra keyword arguments become the
+        ``attributes`` freeform bag (values MUST be strings).
+
+        This method never raises — emitter failures are silently swallowed to
+        avoid disrupting the response path (mirrors sdk-go behaviour per ADR
+        PI4-yaa-0001).
+
+        Example::
+
+            await ctx.audit_emit(
+                "agentic.response.written",
+                outcome="created",
+                operation="POST /campaigns/{id}/optimizations",
+                resource_id=campaign_id,
+            )
+        """
+        event = AuditEvent(
+            event_type=event_type,
+            tenant_id=self.tenant_id,
+            actor_id=self.actor_id,
+            request_id=self.request_id,
+            correlation_id=self.correlation_id,
+            attributes=dict(attributes),
+        )
+        with contextlib.suppress(Exception):
+            await self.audit_emitter.emit(event)
 
 
 @dataclass
