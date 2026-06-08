@@ -4,7 +4,7 @@
 """AgenticResponse — factory for YAAgents Agentic REST Profile v0.1 typed responses.
 
 Status codes and Content-Type values are taken verbatim from the normative table in
-``spec/agentic-rest-profile.md §4`` (ADR PI1-yaa-0002 §1 — sole authoritative source).
+``spec/agentic-rest-profile.md §4``.
 This file does **not** redefine or paraphrase that table; every media-type string used
 below is a Content-Type header value (a reference, not a definition).
 
@@ -98,8 +98,7 @@ class AgenticResponse:
     ) -> Response:
         """202 ``application/vnd.yaagents.operation+json`` — spec §4 row 3 / §7.3.
 
-        Schema ships in PI1-yaa; async polling runtime is v0.2 scope
-        (ADR PI1-yaa-0002 §4 — no polling endpoint built here).
+        Schema ships in v0.1; async polling runtime is v0.2 scope.
         """
         body: dict[str, Any] = {
             "type": "operation_accepted",

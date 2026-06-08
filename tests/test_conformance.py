@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 AimpathyMinds
 
-"""WI-1yaa.SDK-4: Schema-conformance tests.
+""" : Schema-conformance tests.
 
 One parametrised group per vendor media type:
   1. Corpus valid fixtures   → schema MUST validate (PASS)
