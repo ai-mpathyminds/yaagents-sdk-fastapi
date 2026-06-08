@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 AimpathyMinds
 
-"""Tests for @agentic_operation, AgenticResponses, AgenticRouter — AC:
+"""Tests for @agentic_operation, AgenticResponses, AgenticRouter — WI-1yaa.SDK-3.
+
+AC:
 - Decorated endpoint OpenAPI has x-yaagents + per-response vendor content-types.
 - agentic_route_kwargs() returns openapi_extra + responses dicts.
 - AgenticRouter.post() registers a route with full agentic metadata.

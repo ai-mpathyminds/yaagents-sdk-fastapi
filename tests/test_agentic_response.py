@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 AimpathyMinds
 
-"""Tests for AgenticResponse factory — Verifies that each of the 10 factory methods emits the exact HTTP status code
+"""Tests for AgenticResponse factory — WI-1yaa.SDK-1.
+
+Verifies that each of the 10 factory methods emits the exact HTTP status code
 and Content-Type mandated by spec/agentic-rest-profile.md §4, and that every
 vendor-typed body carries a populated ``trace`` block (spec §5).
 """
