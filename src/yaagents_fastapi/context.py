@@ -108,8 +108,8 @@ class AgenticContext:
         ``attributes`` freeform bag (values MUST be strings).
 
         This method never raises — emitter failures are silently swallowed to
-        avoid disrupting the response path (mirrors sdk-go behaviour per ADR
-        PI4-yaa-0001).
+        avoid disrupting the response path (mirrors sdk-go behaviour
+        per ADR PI4-yaa-0001).
 
         Example::
 
